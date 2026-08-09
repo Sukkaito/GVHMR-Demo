@@ -1,0 +1,22 @@
+services:
+  gvhmr-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gvhmr_api_service
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./inputs/checkpoints:/app/inputs/checkpoints
+      - ./input:/app/input
+      - ./output:/app/output
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

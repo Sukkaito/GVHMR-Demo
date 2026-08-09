@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.vscode
+.idea
+*.mp4
+*.avi
+*.mov
+input/*
+output/*
