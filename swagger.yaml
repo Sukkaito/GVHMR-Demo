@@ -1,0 +1,175 @@
+openapi: 3.1.0
+info:
+  title: GVHMR API
+  version: 1.0.0
+  description: Tài liệu API cho hệ thống phân tích và xử lý video GVHMR
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+paths:
+  /api/v1/health:
+    get:
+      summary: Kiểm tra sức khỏe (Health Check)
+      description: API dùng để kiểm tra trạng thái hoạt động của server và GPU.
+      operationId: health_check
+      responses:
+        '200':
+          description: Trạng thái server hoạt động bình thường
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  gpu_available:
+                    type: boolean
+                    example: true
+                  device_name:
+                    type: string
+                    example: "NVIDIA GeForce RTX 4090"
+
+  /api/v1/video/upload:
+    post:
+      summary: Upload Video
+      description: API tải video từ client lên server để chuẩn bị cho quá trình xử lý. Trả về `video_id` dùng cho bước tạo job.
+      operationId: upload_video
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                video:
+                  type: string
+                  format: binary
+                  description: File video cần xử lý (VD .mp4)
+      responses:
+        '200':
+          description: Upload thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  video_id:
+                    type: string
+                    example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                  filename:
+                    type: string
+                    example: "athlete_run.mp4"
+                  saved_path:
+                    type: string
+        '500':
+          description: Lỗi hệ thống trong quá trình lưu file
+
+  /api/v1/jobs:
+    post:
+      summary: Tạo tác vụ xử lý (Create Job)
+      description: Tạo một tác vụ chạy ngầm để phân tích video đã upload dựa vào `video_id`.
+      operationId: create_job
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreateRequest'
+      responses:
+        '200':
+          description: Tác vụ đã được tạo thành công và đang chạy ngầm
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Da bat dau tac vu xu ly tac vu ngam"
+                  job_id:
+                    type: string
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+        '404':
+          description: Không tìm thấy video tương ứng với `video_id` cung cấp
+        '503':
+          description: Server chưa tải xong Model vào GPU
+
+  /api/v1/jobs/{job_id}:
+    get:
+      summary: Kiểm tra trạng thái tác vụ (Get Job Status)
+      description: Trả về trạng thái tiến độ hiện tại của quá trình xử lý video, bao gồm URL kết quả nếu đã hoàn thành.
+      operationId: get_job_status
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: job_id
+          required: true
+          description: ID của tác vụ cần kiểm tra tiến độ
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Trạng thái hiện tại của tác vụ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+                    example: "COMPLETED"
+                  progress:
+                    type: string
+                    example: "Hoàn thành"
+                  result:
+                    type: object
+                    nullable: true
+                    properties:
+                      output_video_url:
+                        type: string
+                        example: "/api/v1/download/incam_global_horiz_video.mp4"
+                      result_file_path:
+                        type: string
+                        example: "output/result/hmr4d_results.pt"
+        '404':
+          description: Không tìm thấy tác vụ với `job_id` cung cấp
+
+components:
+  schemas:
+    JobCreateRequest:
+      type: object
+      required:
+        - video_id
+      properties:
+        video_id:
+          type: string
+          description: ID của video được trả về từ API `/api/v1/video/upload`
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        static_cam:
+          type: boolean
+          default: true
+          description: Video quay từ camera tĩnh hay di chuyển
+        use_dpvo:
+          type: boolean
+          default: true
+          description: Sử dụng mô-đun DPVO cho phân tích chuyển động camera
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Cung cấp API Key để xác thực các request.
+
