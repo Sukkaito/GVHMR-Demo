@@ -1,5 +1,8 @@
 FROM python:3.10-slim AS downloader
 
+# Dummy var to force cache refresh
+ENV CACHE_REFRESH=1 
+
 RUN pip install --no-cache-dir gdown
 
 WORKDIR /downloads
@@ -10,7 +13,8 @@ RUN gdown 1XsCpNZ5J3OOGpnsrNhp_nFbfrVFcBMpL -O gvhmr_siga24_release.ckpt
 FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime AS runtime
 
 # Cấu hình biến môi trường không ghi .pyc và xuất log trực tiếp
-ENV PYTHONUNBUFFERED=1 \
+ENV CACHE_REFRESH = 1 \
+    PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
@@ -52,3 +56,4 @@ EXPOSE 8000
 
 # Khởi chạy Uvicorn Server
 CMD ["uvicorn", "gvhmr-api:app", "--host", "0.0.0.0", "--port", "8000"]
+
