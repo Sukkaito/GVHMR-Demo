@@ -152,6 +152,7 @@ def load_model():
         model = model.eval().cuda()
         print("Model loaded successfully")
 
+@app.get("/ping")
 @app.get("/api/v1/health")
 def health_check():
     """
