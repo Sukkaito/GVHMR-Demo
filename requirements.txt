@@ -45,7 +45,8 @@ joblib
 # ==========================================
 # 5. 3D Vision & Body Models (SMPL / SMPLX)
 # ==========================================
-pytorch3d @ https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py310_cu121_pyt230/pytorch3d-0.7.6-cp310-cp310-linux_x86_64.whl
+# PyTorch3D: wheel dành cho Linux (trên Windows tự động bỏ qua vì đã cài trong Conda env)
+pytorch3d @ https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py310_cu121_pyt230/pytorch3d-0.7.6-cp310-cp310-linux_x86_64.whl ; sys_platform == 'linux'
 trimesh
 chumpy
 smplx
@@ -55,6 +56,6 @@ pycolmap
 # ==========================================
 # 6. 2D Pose & Tracking
 # ==========================================
-ultralytics==8.2.42
-cython_bbox
+# cython_bbox yêu cầu MSVC compiler trên Windows (chỉ cần trên Linux)
+cython_bbox ; sys_platform == 'linux'
 lapx

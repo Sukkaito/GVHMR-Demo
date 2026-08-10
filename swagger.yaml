@@ -147,6 +147,31 @@ paths:
         '404':
           description: Không tìm thấy tác vụ với `job_id` cung cấp
 
+  /api/v1/metrics/evaluate:
+    post:
+      summary: Tính toán sai số MPJPE và PA-MPJPE (Calculate Evaluation Metrics)
+      description: Tính toán sai số trung bình vị trí khớp MPJPE (Pelvis-aligned) và PA-MPJPE (Procrustes-aligned) giữa ma trận tọa độ dự đoán và thực tế.
+      operationId: evaluate_metrics
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalculateMetricsRequest'
+      responses:
+        '200':
+          description: Tính toán thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalculateMetricsResponse'
+        '400':
+          description: Dữ liệu đầu vào không hợp lệ hoặc kích thước ma trận không khớp
+        '404':
+          description: Không tìm thấy job_id hoặc file kết quả tương ứng
+
 components:
   schemas:
     JobCreateRequest:
@@ -166,10 +191,101 @@ components:
           type: boolean
           default: true
           description: Sử dụng mô-đun DPVO cho phân tích chuyển động camera
+
+    CalculateMetricsRequest:
+      type: object
+      required:
+        - target_j3d
+      properties:
+        pred_j3d:
+          type: array
+          description: Tọa độ khớp 3D dự đoán dạng ma trận (F, J, 3) hoặc (J, 3). Tùy chọn nếu cung cấp job_id.
+          items:
+            type: array
+            items:
+              type: number
+        target_j3d:
+          type: array
+          description: Tọa độ khớp 3D thực tế (Ground-Truth) dạng ma trận (F, J, 3) hoặc (J, 3).
+          items:
+            type: array
+            items:
+              type: number
+        job_id:
+          type: string
+          description: (Tùy chọn) ID tác vụ đã hoàn thành để tự động nạp kết quả dự đoán.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        pelvis_idxs:
+          type: array
+          items:
+            type: integer
+          default: [1, 2]
+          description: Chỉ số các khớp pelvis dùng để căn chỉnh gốc tọa độ.
+        unit:
+          type: string
+          enum: [mm, m]
+          default: "mm"
+          description: Đơn vị đo sai số đầu ra.
+
+    CalculateMetricsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "success"
+        unit:
+          type: string
+          example: "mm"
+        num_frames:
+          type: integer
+          example: 100
+        num_joints:
+          type: integer
+          example: 24
+        mpjpe:
+          type: object
+          properties:
+            mean:
+              type: number
+              example: 45.21
+            min:
+              type: number
+              example: 20.15
+            max:
+              type: number
+              example: 89.30
+            std:
+              type: number
+              example: 12.40
+            per_frame:
+              type: array
+              items:
+                type: number
+        pa_mpjpe:
+          type: object
+          properties:
+            mean:
+              type: number
+              example: 32.14
+            min:
+              type: number
+              example: 15.02
+            max:
+              type: number
+              example: 65.10
+            std:
+              type: number
+              example: 8.55
+            per_frame:
+              type: array
+              items:
+                type: number
+
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
       description: Cung cấp API Key để xác thực các request.
+
 
