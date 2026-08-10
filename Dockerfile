@@ -24,8 +24,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Copy file requirements.txt và cài đặt phụ thuộc Python
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt
+RUN grep -v '^chumpy' requirements.txt > requirements-no-chumpy.txt && \
+    pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements-no-chumpy.txt
+
+# Install chumpy separately
+RUN python -m pip install --no-cache-dir --no-build-isolation chumpy==0.70
 
 # Copy mã nguồn ứng dụng vào container
 COPY . .
