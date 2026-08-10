@@ -47,9 +47,9 @@ RUN python -m pip install --no-cache-dir --no-build-isolation chumpy==0.70
 COPY . .
 
 # Tạo cấu trúc thư mục I/O cần thiết
-RUN mkdir -p input/temp_upload output/result inputs/checkpoints/gvhrm
+RUN mkdir -p input/temp_upload output/result inputs/checkpoints/gvhmr
 
-COPY --from=downloader /downloads/gvhmr_siga24_release.ckpt /app/inputs/checkpoints/gvhrm/gvhmr_siga24_release.ckpt
+COPY --from=downloader /downloads/gvhmr_siga24_release.ckpt /app/inputs/checkpoints/gvhmr/gvhmr_siga24_release.ckpt
 
 # Mở port 8000 cho FastAPI
 EXPOSE 8000
