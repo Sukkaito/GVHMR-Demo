@@ -1,5 +1,13 @@
+FROM python:3.10-slim AS downloader
+
+RUN pip install --no-cache-dir gdown
+
+WORKDIR /downloads
+
+RUN gdown 1XsCpNZ5J3OOGpnsrNhp_nFbfrVFcBMpL -O gvhmr_siga24_release.ckpt
+
 # Sử dụng Base Image PyTorch 2.3.0 hỗ trợ CUDA 12.1 & Python 3.10
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime AS runtime
 
 # Cấu hình biến môi trường không ghi .pyc và xuất log trực tiếp
 ENV PYTHONUNBUFFERED=1 \
@@ -35,7 +43,9 @@ RUN python -m pip install --no-cache-dir --no-build-isolation chumpy==0.70
 COPY . .
 
 # Tạo cấu trúc thư mục I/O cần thiết
-RUN mkdir -p input/temp_upload output/result inputs/checkpoints
+RUN mkdir -p input/temp_upload output/result inputs/checkpoints/gvhrm
+
+COPY --from=downloader /downloads/gvhmr_siga24_release.ckpt /app/inputs/checkpoints/gvhrm/gvhmr_siga24_release.ckpt
 
 # Mở port 8000 cho FastAPI
 EXPOSE 8000
